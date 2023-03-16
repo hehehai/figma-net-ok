@@ -1,0 +1,17 @@
+[package]
+name = "figma-net-ok"
+version = "0.1.0"
+edition = "2021"
+authors = ["Hehehai <riverhohai@gmail.com>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "4.1.8", features = ["derive"] }
+yansi = "0.5.1"
+dialoguer = "0.10.3"
+trust-dns-resolver = { version = "0.22.0", features = ["dns-over-rustls"] }
+tokio = "1.26.0"
+reqwest = { version = "0.11.14", features = ["json", "rustls-tls"] }
+hyper = "0.14.25"
+serde = { version = "1.0.156", features = ["derive"] }
