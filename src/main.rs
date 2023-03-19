@@ -1,5 +1,5 @@
 mod find_ip;
-mod reset;
+mod hosts;
 
 use std::{
     io::{stdout, Write},
@@ -7,7 +7,7 @@ use std::{
 };
 
 use dialoguer::{console::Term, theme::ColorfulTheme, Select};
-use reset::add_hosts;
+use hosts::add_hosts;
 use tokio::runtime;
 use yansi::{Color, Paint, Style};
 
@@ -69,7 +69,7 @@ fn main() -> std::io::Result<()> {
         Some(1) => Some(get_best_host(DNSServerType::Full)),
         Some(2) => {
             println!("User selected item: rest");
-            reset::reset_host(&RESET_HOSTNAME)?;
+            hosts::reset_host(&RESET_HOSTNAME)?;
             None
         }
         _ => panic!("invliad model"),
