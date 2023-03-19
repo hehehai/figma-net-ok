@@ -112,7 +112,7 @@ fn get_best_host(model: DNSServerType) -> Vec<(String, String)> {
     let host_len = HOST_NAMES.len();
 
     let mut best_ips = vec![];
-    let rt = runtime::Runtime::new().unwrap();
+    let rt = runtime::Runtime::new().expect("异步程序执行异常");
 
     for (idx, host) in HOST_NAMES.iter().enumerate() {
         let runner_paint = gray_color.paint(format!("[{}/{}]", idx + 1, host_len));

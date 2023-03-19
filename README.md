@@ -21,6 +21,6 @@ sudo cargo run
 - [x] 重置 Figma 相关 hosts
 - [x] 查找最优 ip
 - [x] 自动设置最优 ip 到 hosts
-- [ ] 错误处理
+- [x] 错误处理
 - [ ] 测试
 - [ ] 打包

@@ -41,21 +41,21 @@ pub fn dns_look_up(
     hostname: &str,
     dns_server: &str,
 ) -> Result<Vec<IpAddr>, Box<dyn std::error::Error>> {
-    let dns_ip: &[IpAddr] = &[dns_server.parse::<IpAddr>().unwrap()];
+    let dns_ip: IpAddr = dns_server.parse::<IpAddr>()?;
 
     // 创建自定义 DNS 服务器配置
     let resolver_config = ResolverConfig::from_parts(
         None,
         vec![],
-        NameServerConfigGroup::from_ips_clear(dns_ip, 53, true),
+        NameServerConfigGroup::from_ips_clear(&[dns_ip], 53, true),
     );
-    let (_, resolver_opts) = read_system_conf().unwrap();
+    let (_, resolver_opts) = read_system_conf()?;
 
     // 创建异步 DNS 解析器
-    let resolver = Resolver::new(resolver_config, resolver_opts).unwrap();
+    let resolver = Resolver::new(resolver_config, resolver_opts)?;
 
     // 执行 DNS 查询
-    let response = resolver.lookup_ip(hostname).unwrap();
+    let response = resolver.lookup_ip(hostname)?;
     let ips: Vec<IpAddr> = response.iter().map(|r| r).collect();
 
     Ok(ips)
