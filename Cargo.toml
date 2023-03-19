@@ -11,7 +11,7 @@ clap = { version = "4.1.8", features = ["derive"] }
 yansi = "0.5.1"
 dialoguer = "0.10.3"
 trust-dns-resolver = { version = "0.22.0", features = ["dns-over-rustls"] }
-tokio = "1.26.0"
+tokio = { version = "1.26.0", features = ["rt-multi-thread", "macros"] }
 reqwest = { version = "0.11.14", features = ["json", "rustls-tls"] }
 hyper = "0.14.25"
 serde = { version = "1.0.156", features = ["derive"] }

@@ -41,9 +41,7 @@ fn write_hosts_file(lines: &[String]) -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn reset_host(host_names: &[&str]) -> std::io::Result<()> {
-    let mut lines = read_hosts_file()?;
-
+fn filter_hosts_lines(lines: &mut Vec<String>, host_names: &[&str]) -> bool {
     let mut finded = false;
 
     lines.retain(|line| {
@@ -69,7 +67,13 @@ pub fn reset_host(host_names: &[&str]) -> std::io::Result<()> {
         return true;
     });
 
-    if finded {
+    finded
+}
+
+pub fn reset_host(host_names: &[&str]) -> std::io::Result<()> {
+    let mut lines = read_hosts_file()?;
+
+    if filter_hosts_lines(&mut lines, host_names) {
         write_hosts_file(&lines)?;
     }
 
@@ -78,23 +82,108 @@ pub fn reset_host(host_names: &[&str]) -> std::io::Result<()> {
 
 pub fn add_hosts(hosts: &[(String, String)]) -> std::io::Result<()> {
     let mut lines = read_hosts_file()?;
-    let mut added = false;
-
-    for (ip, hostname) in hosts {
-        let line = format!("{}\t{}", ip, hostname);
-
-        if !lines.contains(&line) {
-            if !added {
-                lines.push("# set by figma net ok".to_string());
-            }
-            added = true;
-            lines.push(line);
-        }
-    }
+    let added = add_host_lines(&mut lines, hosts);
 
     if added {
         write_hosts_file(&lines)?;
     }
 
     Ok(())
+}
+
+fn add_host_lines(lines: &mut Vec<String>, hosts: &[(String, String)]) -> bool {
+    let mut added = false;
+    for (ip, hostname) in hosts {
+        let line = format!("{} {}", ip, hostname);
+
+        if !lines.contains(&line) {
+            if !added {
+                lines.push("# set by figma net ok".to_string());
+            }
+            added = true;
+
+            lines.push(line);
+        }
+    }
+
+    added
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_filter_hosts_lines() {
+        let mut lines = vec![
+            "# set by figma net ok".to_string(),
+            "127.0.0.1 localhost".to_string(),
+            "::1 localhost".to_string(),
+            "192.168.0.1 myrouter".to_string(),
+            "192.168.0.2 myprinter".to_string(),
+            "192.168.0.3 myserver".to_string(),
+            "192.168.0.4 mydatabase".to_string(),
+            "fe80::1%lo0 localhost".to_string(),
+            "ff02::fb ip6-allnodes".to_string(),
+            "ff02::1 ip6-allnodes".to_string(),
+            "ff02::2 ip6-allrouters".to_string(),
+        ];
+        let host_names = &["myprinter", "myserver"];
+
+        let filtered = filter_hosts_lines(&mut lines, host_names);
+
+        assert!(filtered);
+        assert_eq!(
+            lines,
+            vec![
+                "127.0.0.1 localhost".to_string(),
+                "::1 localhost".to_string(),
+                "192.168.0.1 myrouter".to_string(),
+                "192.168.0.4 mydatabase".to_string(),
+                "fe80::1%lo0 localhost".to_string(),
+                "ff02::fb ip6-allnodes".to_string(),
+                "ff02::1 ip6-allnodes".to_string(),
+                "ff02::2 ip6-allrouters".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_add_host_lines() {
+        let mut lines = vec![
+            "127.0.0.1 localhost".to_string(),
+            "::1 localhost".to_string(),
+            "192.168.0.1 myrouter".to_string(),
+            "fe80::1%lo0 localhost".to_string(),
+            "ff02::fb ip6-allnodes".to_string(),
+            "ff02::1 ip6-allnodes".to_string(),
+            "192.168.0.2 myprinter".to_string(),
+            "ff02::2 ip6-allrouters".to_string(),
+        ];
+        let hosts = &[
+            ("192.168.0.2".to_string(), "myprinter".to_string()),
+            ("192.168.0.3".to_string(), "myserver".to_string()),
+            ("192.168.0.4".to_string(), "mydatabase".to_string()),
+        ];
+
+        let added = add_host_lines(&mut lines, hosts);
+
+        assert!(added);
+        assert_eq!(
+            lines,
+            vec![
+                "127.0.0.1 localhost".to_string(),
+                "::1 localhost".to_string(),
+                "192.168.0.1 myrouter".to_string(),
+                "fe80::1%lo0 localhost".to_string(),
+                "ff02::fb ip6-allnodes".to_string(),
+                "ff02::1 ip6-allnodes".to_string(),
+                "192.168.0.2 myprinter".to_string(),
+                "ff02::2 ip6-allrouters".to_string(),
+                "# set by figma net ok".to_string(),
+                "192.168.0.3 myserver".to_string(),
+                "192.168.0.4 mydatabase".to_string(),
+            ]
+        );
+    }
 }

@@ -144,3 +144,46 @@ async fn get_ip_info(ip: &IpAddr) -> String {
 
     res
 }
+
+#[cfg(test)]
+mod tests {
+    use std::net::Ipv4Addr;
+
+    use tokio::runtime;
+
+    use super::*;
+
+    #[test]
+    fn test_dns_look_up() {
+        let hostname = "www.google.com";
+        let dns_server = "8.8.8.8";
+
+        let result = dns_look_up(hostname, dns_server).unwrap();
+        assert!(result.len() > 0);
+    }
+
+    #[test]
+    fn test_race_ips() {
+        let url = "https://www.figma.com/api/community_categories/all?page_size=10";
+        let ips = vec![
+            IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8)),
+            IpAddr::V4(Ipv4Addr::new(1, 1, 1, 1)),
+        ];
+
+        let (best_ip, _, _) = runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async { race_ips(url, &ips).await });
+
+        assert_eq!(best_ip, IpAddr::V4(Ipv4Addr::new(1, 1, 1, 1)));
+    }
+
+    #[tokio::test]
+    async fn test_get_ip_info() {
+        let ip = IpAddr::from([114, 114, 114, 114]);
+        let result = get_ip_info(&ip).await;
+
+        assert!(result.len() > 0);
+    }
+}
