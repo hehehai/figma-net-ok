@@ -22,5 +22,5 @@ sudo cargo run
 - [x] 查找最优 ip
 - [x] 自动设置最优 ip 到 hosts
 - [x] 错误处理
-- [ ] 测试
+- [x] 测试
 - [ ] 打包
